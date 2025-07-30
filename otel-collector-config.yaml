@@ -5,6 +5,8 @@ processors:
     spike_limit_mib: 500
 
   batch:
+    timeout: 1s
+    send_batch_size: 1024
 
 exporters:
   logging:
@@ -14,6 +16,22 @@ exporters:
     endpoint: jaeger-all-in-one:4317
     tls:
       insecure: true
+      
+  # Add Dynatrace exporter for your environment
+  otlphttp:
+    endpoint: "https://TODO.live.dynatrace.com/api/v2/otlp"
+    headers:
+      Authorization: "Api-Token TODO"
+    tls:
+      insecure: false
+
+  # For metrics
+  dynatrace:
+    endpoint: "https://TODO.live.dynatrace.com/api/v2/metrics/ingest"
+    api_token: "TODO"
+    default_dimensions:
+      deployment.environment: "test"
+      service.name: "solace-broker"
 
 receivers:
   otlp:
@@ -40,5 +58,7 @@ service:
   pipelines:
     traces:
       receivers: [solace, otlp]
-      processors: [batch, memory_limiter]
-      exporters: [otlp/jaeger, logging]
+      #processors: [batch, memory_limiter]
+      #exporters: [otlp/jaeger, logging]
+      processors: [batch]
+      exporters: [otlphttp,otlp/jaeger,logging]
